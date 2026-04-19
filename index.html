@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hamming Code - Interaktive Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1000px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-play {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-play:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-pause {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-pause:hover {
+            background: #ee5a52;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-reset {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #40c057;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(81, 207, 102, 0.4);
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            min-height: 60px;
+        }
+
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .info-box p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .visualization {
+            background: #f9f9f9;
+            padding: 60px 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 2px solid #eee;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .bit-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .bit {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid transparent;
+            position: relative;
+            cursor: default;
+        }
+
+        .bit.data {
+            background: #74c0fc;
+            color: white;
+            border-color: #4ba3f5;
+            box-shadow: 0 4px 8px rgba(74, 163, 245, 0.3);
+        }
+
+        .bit.parity {
+            background: #ffd43b;
+            color: #333;
+            border-color: #ffb800;
+            box-shadow: 0 4px 8px rgba(255, 184, 0, 0.3);
+        }
+
+        .bit.error {
+            background: #ff8787;
+            color: white;
+            border-color: #ff6b6b;
+            box-shadow: 0 4px 8px rgba(255, 107, 107, 0.5);
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        .bit.correct {
+            background: #51cf66;
+            color: white;
+            border-color: #40c057;
+            box-shadow: 0 4px 8px rgba(81, 207, 102, 0.3);
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .bit-label {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        .bit-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .step-counter {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        .formula {
+            background: #fff3e0;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: center;
+            margin: 15px 0;
+            color: #333;
+            border-left: 4px solid #ff9800;
+        }
+
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+        }
+
+        .legend-box.data {
+            background: #74c0fc;
+            border: 2px solid #4ba3f5;
+        }
+
+        .legend-box.parity {
+            background: #ffd43b;
+            border: 2px solid #ffb800;
+        }
+
+        .legend-box.error {
+            background: #ff8787;
+            border: 2px solid #ff6b6b;
+        }
+
+        .legend-box.correct {
+            background: #51cf66;
+            border: 2px solid #40c057;
+        }
+
+        .footer {
+            text-align: center;
+            color: #999;
+            margin-top: 30px;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .bit {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Hamming Code Animation</h1>
+        <p class="subtitle">Fehlerkorrektur Schritt-für-Schritt erklärt</p>
+
+        <div class="controls">
+            <button class="btn-reset" onclick="previous()">◀ Zurück</button>
+            <button class="btn-play" onclick="next()">Weiter ▶</button>
+            <button class="btn-reset" onclick="reset()">🔄 Zurücksetzen</button>
+        </div>
+
+        <div class="info-box">
+            <h3 id="stepTitle">Schritt 1: Eingabedaten</h3>
+            <p id="explanation">Wir beginnen mit 4 Datenbits: 1, 0, 1, 1 (d1, d2, d3, d4)</p>
+        </div>
+
+        <div class="visualization">
+            <div class="step-counter">
+                <span id="stepCounter">Schritt 1 von 11</span>
+            </div>
+            <div id="visualization"></div>
+            <div id="formula"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box data"></div>
+                <span>Datenbits</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box parity"></div>
+                <span>Paritätsbits</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box error"></div>
+                <span>Fehler</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box correct"></div>
+                <span>Korrigiert</span>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Hamming(7,4) Code - Interaktive Lernanimation für Schulen und Universitäten</p>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+
+        const steps = [
+            {
+                title: "Schritt 1: Eingabedaten",
+                explanation: "Wir haben 4 Datenbits: 1, 0, 1, 1 (d1, d2, d3, d4). Diese müssen übertragen werden.",
+                bits: [
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: ""
+            },
+            {
+                title: "Schritt 2: Struktur vorbereiten",
+                explanation: "Wir fügen 3 Paritätsbits ein (p1, p2, p4). Anordnung: p1, d1, p2, d2, p4, d3, d4",
+                bits: [
+                    { value: "?", type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: "?", type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: "?", type: "parity", label: "p4" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "Hamming(7,4): 7 Bits insgesamt"
+            },
+            {
+                title: "Schritt 3: Berechne p1",
+                explanation: "p1 prüft Positionen 1, 3, 5, 7 (ungerade). XOR: d1 ⊕ d3 ⊕ d4 = 1 ⊕ 1 ⊕ 1 = 1",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: "?", type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: "?", type: "parity", label: "p4" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "p1 = d1 ⊕ d3 ⊕ d4 = 1 ⊕ 1 ⊕ 1 = 1"
+            },
+            {
+                title: "Schritt 4: Berechne p2",
+                explanation: "p2 prüft Positionen 2, 3, 6, 7. XOR: d1 ⊕ d3 ⊕ d4 = 1 ⊕ 1 ⊕ 1 = 1",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: "?", type: "parity", label: "p4" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "p2 = d1 ⊕ d3 ⊕ d4 = 1 ⊕ 1 ⊕ 1 = 1"
+            },
+            {
+                title: "Schritt 5: Berechne p4",
+                explanation: "p4 prüft Positionen 4, 5, 6, 7. XOR: d2 ⊕ d3 ⊕ d4 = 0 ⊕ 1 ⊕ 1 = 0",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 0, type: "parity", label: "p4" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "p4 = d2 ⊕ d3 ⊕ d4 = 0 ⊕ 1 ⊕ 1 = 0"
+            },
+            {
+                title: "Schritt 6: Codewort fertig",
+                explanation: "Das komplette Hamming(7,4) Codewort ist: 1110011 (bereit zur Übertragung!)",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 0, type: "parity", label: "p4" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "Codewort: 1 1 1 0 0 1 1"
+            },
+            {
+                title: "Schritt 7: Fehler einführen!",
+                explanation: "Bei der Übertragung passiert ein Fehler! Das 5. Bit wird beschädigt (0 → 1). Empfangen: 1110111",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 1, type: "error", label: "p4❌" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "Fehlerhaft empfangen: 1 1 1 0 1 1 1"
+            },
+            {
+                title: "Schritt 8: Prüfung 1",
+                explanation: "Prüfe Positionen 1, 3, 5, 7: 1⊕1⊕1⊕1 = 0 (gerade) ✓ Bit 1 der Fehlerposition = 0",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 1, type: "error", label: "p4❌" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "Prüfung 1: 1⊕1⊕1⊕1 = 0 ✓ → Bit 0 = 0"
+            },
+            {
+                title: "Schritt 9: Prüfung 2",
+                explanation: "Prüfe Positionen 2, 3, 6, 7: 1⊕1⊕1⊕1 = 0 (gerade) ✓ Bit 2 der Fehlerposition = 0",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 1, type: "error", label: "p4❌" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "Prüfung 2: 1⊕1⊕1⊕1 = 0 ✓ → Bit 1 = 0"
+            },
+            {
+                title: "Schritt 10: Prüfung 4",
+                explanation: "Prüfe Positionen 4, 5, 6, 7: 0⊕1⊕1⊕1 = 1 (ungerade) ✗ Bit 3 der Fehlerposition = 1 → Fehler an Position 4+1=5!",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 1, type: "error", label: "p4❌" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "Prüfung 4: 0⊕1⊕1⊕1 = 1 ✗ → Bit 2 = 1 → Fehler an Position 5!"
+            },
+            {
+                title: "Schritt 11: Fehler korrigiert!",
+                explanation: "Wir flippen das Bit an Position 5 (1 → 0). Das Codewort ist wieder korrekt: 1110011 ✓",
+                bits: [
+                    { value: 1, type: "parity", label: "p1" },
+                    { value: 1, type: "data", label: "d1" },
+                    { value: 1, type: "parity", label: "p2" },
+                    { value: 0, type: "data", label: "d2" },
+                    { value: 0, type: "correct", label: "p4✓" },
+                    { value: 1, type: "data", label: "d3" },
+                    { value: 1, type: "data", label: "d4" }
+                ],
+                formula: "Korrigiert: 1 1 1 0 0 1 1 ✓"
+            }
+        ];
+
+        function renderBits(bits) {
+            let html = '<div class="bit-row">';
+            bits.forEach((bit, index) => {
+                const position = index + 1;  // Position 1-7
+                html += `
+                    <div class="bit-container">
+                        <div class="bit ${bit.type}">${bit.value}</div>
+                        <div class="bit-label"><strong>Pos ${position}</strong><br>${bit.label}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function showStep(stepNum) {
+            if (stepNum < 0 || stepNum >= steps.length) return;
+            
+            currentStep = stepNum;
+            const step = steps[stepNum];
+            
+            document.getElementById('stepTitle').textContent = step.title;
+            document.getElementById('explanation').textContent = step.explanation;
+            document.getElementById('visualization').innerHTML = renderBits(step.bits);
+            document.getElementById('formula').innerHTML = step.formula ? `<div class="formula">${step.formula}</div>` : '';
+            document.getElementById('stepCounter').textContent = `Schritt ${stepNum + 1} von ${steps.length}`;
+        }
+
+        function next() {
+            if (currentStep < steps.length - 1) {
+                showStep(currentStep + 1);
+            }
+        }
+
+        function previous() {
+            if (currentStep > 0) {
+                showStep(currentStep - 1);
+            }
+        }
+
+        function reset() {
+            showStep(0);
+        }
+
+        // Initiale Anzeige
+        showStep(0);
+    </script>
+</body>
+</html>
